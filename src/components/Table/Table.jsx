@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 import DefaultApi from '../../api-js/src/api/DefaultApi';
 import './Table.css';
 // Это комментарий — он не влияет на работу кода
+// hi
 const api = new DefaultApi();
 
 function Table() {
