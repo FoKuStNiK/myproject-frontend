@@ -1,0 +1,124 @@
+.table-container {
+    margin: 20px 0;
+    padding: 25px;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.table-container h3 {
+    margin: 0 0 5px 0;
+    color: #2c3e50;
+    font-size: 20px;
+}
+
+.table-hint {
+    color: #95a5a6;
+    font-size: 14px;
+    margin: 0 0 20px 0;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    border: 2px solid #34495e;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.data-table thead {
+    background: #34495e;
+}
+
+.data-table th {
+    color: white;
+    padding: 12px 15px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 14px;
+    border: 1px solid #2c3e50;
+}
+
+.data-table td {
+    padding: 4px;
+    border: 1px solid #ecf0f1;
+    min-width: 100px;
+    background: #fafbfc;
+}
+
+.data-table td:hover {
+    background: #f0f3f7;
+}
+
+.table-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: none;
+    font-size: 14px;
+    text-align: center;
+    background: transparent;
+    outline: none;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+
+.table-input:focus {
+    background: #fff8e1;
+    border-radius: 4px;
+    box-shadow: inset 0 0 0 2px #f39c12;
+}
+
+.table-input::placeholder {
+    color: #bdc3c7;
+    font-style: italic;
+}
+
+.table-footer {
+    margin-top: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 15px;
+    border-top: 1px solid #ecf0f1;
+}
+
+.table-footer span {
+    color: #7f8c8d;
+    font-size: 14px;
+}
+
+.clear-button,
+.reload-button {
+    padding: 8px 20px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s;
+    font-family: inherit;
+}
+
+.clear-button {
+    background: #e74c3c;
+    color: white;
+}
+
+.clear-button:hover {
+    background: #c0392b;
+}
+
+.reload-button {
+    background: #3498db;
+    color: white;
+}
+
+.reload-button:hover {
+    background: #2980b9;
+}
+
+.loading {
+    padding: 40px;
+    text-align: center;
+    color: #7f8c8d;
+    font-size: 16px;
+}
