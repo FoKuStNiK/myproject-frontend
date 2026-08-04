@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import DefaultApi from '../../api-js/src/api/DefaultApi';
 import './Table.css';
-
+// Это комментарий — он не влияет на работу кода
 const api = new DefaultApi();
 
 function Table() {
