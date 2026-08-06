@@ -1,18 +1,19 @@
-# MyProject Frontend
+## ⚡ Быстрый старт!
 
-Фронтенд-часть проекта — интерфейс для работы с таблицей 6×4 (React).
+### 1️⃣ Бэкенд (в первом терминале)
 
-## 🚀 Быстрый старт
-**Важно:** Проект состоит из двух частей — фронтенда и бэкенда. Обе должны быть запущены одновременно в разных терминалах.
 ```bash
-# 1. Клонируй репозиторий
-git clone https://github.com/FoKuStNiK/myproject-frontend.git
-
-# 2. Перейди в папку проекта
-cd myproject-frontend
-
-# 3. Установи все зависимости
+git clone https://github.com/FoKuStNiK/myproject-backend.git
+cd myproject-backend
 npm install
+npm start
 
-# 4. Запусти приложение
+2️⃣ Фронтенд (во втором терминале)
+
+git clone https://github.com/FoKuStNiK/myproject-frontend.git
+cd myproject-frontend
+npm install
+cd src/api-js
+npm install   # ← зависимости для OpenAPI-клиента
+cd ../..
 npm start

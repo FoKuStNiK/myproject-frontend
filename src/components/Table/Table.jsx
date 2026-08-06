@@ -66,9 +66,11 @@ function Table() {
             if (result.success) {
                 toast.success(`✅ Ячейка (${rowIndex + 1}, ${colIndex + 1}) сохранена`);
                 setPreviousData(prev => {
-                    const newData = [...prev];
-                    if (!newData[rowIndex]) newData[rowIndex] = [];
-                    newData[rowIndex][colIndex] = currentValue;
+                    const newData = prev.map((row, r) =>
+                        r === rowIndex
+                            ? row.map((cell, c) => c === colIndex ? currentValue : cell)
+                            : row
+                    );
                     return newData;
                 });
             } else {
@@ -79,7 +81,6 @@ function Table() {
             toast.error('❌ Ошибка соединения с сервером');
         }
     };
-
     // 4. Очистка таблицы (одна функция)
     const clearTable = async () => {
         try {
