@@ -1,3 +1,2 @@
 node_modules
 echo "myproject-backend/" >> .gitignore
-git add .gitignore
