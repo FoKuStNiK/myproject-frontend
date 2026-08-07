@@ -17,3 +17,17 @@ cd src/api-js
 npm install   # ← зависимости для OpenAPI-клиента
 cd ../..
 npm start
+
+## 🐳 Запуск через Docker
+
+### 1️⃣ Бэкенд
+```bash
+cd myproject-backend
+docker build -t my-backend .
+docker run -p 5000:5000 my-backend
+
+### 2️⃣ Фронтенд
+
+cd myproject-frontend
+docker build -t my-frontend .
+docker run -p 3000:3000 my-frontend
