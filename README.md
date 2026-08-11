@@ -31,3 +31,8 @@ docker run -p 5000:5000 my-backend
 cd myproject-frontend
 docker build -t my-frontend .
 docker run -p 3000:3000 my-frontend
+
+
+###  Запуск через Docker Compose
+cd ~/Desktop/myproject-backend-temp
+docker-compose up -d --build
