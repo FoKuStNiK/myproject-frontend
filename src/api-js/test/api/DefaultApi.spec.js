@@ -78,36 +78,6 @@
         done();
       });
     });
-    describe('tableDataCellPatch', function() {
-      it('should call tableDataCellPatch successfully', function(done) {
-        //uncomment below and update the code to test tableDataCellPatch
-        //instance.tableDataCellPatch(function(error) {
-        //  if (error) throw error;
-        //expect().to.be();
-        //});
-        done();
-      });
-    });
-    describe('tableDataDelete', function() {
-      it('should call tableDataDelete successfully', function(done) {
-        //uncomment below and update the code to test tableDataDelete
-        //instance.tableDataDelete(function(error) {
-        //  if (error) throw error;
-        //expect().to.be();
-        //});
-        done();
-      });
-    });
-    describe('tableDataGet', function() {
-      it('should call tableDataGet successfully', function(done) {
-        //uncomment below and update the code to test tableDataGet
-        //instance.tableDataGet(function(error) {
-        //  if (error) throw error;
-        //expect().to.be();
-        //});
-        done();
-      });
-    });
   });
 
 }));

@@ -14,8 +14,6 @@
 
 import ApiClient from './ApiClient';
 import NewsGet200Response from './model/NewsGet200Response';
-import TableDataCellPatch200Response from './model/TableDataCellPatch200Response';
-import TableDataCellPatchRequest from './model/TableDataCellPatchRequest';
 import DefaultApi from './api/DefaultApi';
 
 
@@ -62,18 +60,6 @@ export {
      * @property {module:model/NewsGet200Response}
      */
     NewsGet200Response,
-
-    /**
-     * The TableDataCellPatch200Response model constructor.
-     * @property {module:model/TableDataCellPatch200Response}
-     */
-    TableDataCellPatch200Response,
-
-    /**
-     * The TableDataCellPatchRequest model constructor.
-     * @property {module:model/TableDataCellPatchRequest}
-     */
-    TableDataCellPatchRequest,
 
     /**
     * The DefaultApi service constructor.

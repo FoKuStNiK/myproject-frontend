@@ -14,8 +14,6 @@
 
 import ApiClient from "../ApiClient";
 import NewsGet200Response from '../model/NewsGet200Response';
-import TableDataCellPatch200Response from '../model/TableDataCellPatch200Response';
-import TableDataCellPatchRequest from '../model/TableDataCellPatchRequest';
 
 /**
 * Default service.
@@ -139,119 +137,6 @@ export default class DefaultApi {
       let returnType = NewsGet200Response;
       return this.apiClient.callApi(
         '/support', 'GET',
-        pathParams, queryParams, headerParams, formParams, postBody,
-        authNames, contentTypes, accepts, returnType, null, callback
-      );
-    }
-
-    /**
-     * Callback function to receive the result of the tableDataCellPatch operation.
-     * @callback module:api/DefaultApi~tableDataCellPatchCallback
-     * @param {String} error Error message, if any.
-     * @param {module:model/TableDataCellPatch200Response} data The data returned by the service call.
-     * @param {String} response The complete HTTP response.
-     */
-
-    /**
-     * Обновить одну ячейку
-     * @param {module:model/TableDataCellPatchRequest} tableDataCellPatchRequest 
-     * @param {module:api/DefaultApi~tableDataCellPatchCallback} callback The callback function, accepting three arguments: error, data, response
-     * data is of type: {@link module:model/TableDataCellPatch200Response}
-     */
-    tableDataCellPatch(tableDataCellPatchRequest, callback) {
-      let postBody = tableDataCellPatchRequest;
-      // verify the required parameter 'tableDataCellPatchRequest' is set
-      if (tableDataCellPatchRequest === undefined || tableDataCellPatchRequest === null) {
-        throw new Error("Missing the required parameter 'tableDataCellPatchRequest' when calling tableDataCellPatch");
-      }
-
-      let pathParams = {
-      };
-      let queryParams = {
-      };
-      let headerParams = {
-      };
-      let formParams = {
-      };
-
-      let authNames = [];
-      let contentTypes = ['application/json'];
-      let accepts = ['application/json'];
-      let returnType = TableDataCellPatch200Response;
-      return this.apiClient.callApi(
-        '/table-data/cell', 'PATCH',
-        pathParams, queryParams, headerParams, formParams, postBody,
-        authNames, contentTypes, accepts, returnType, null, callback
-      );
-    }
-
-    /**
-     * Callback function to receive the result of the tableDataDelete operation.
-     * @callback module:api/DefaultApi~tableDataDeleteCallback
-     * @param {String} error Error message, if any.
-     * @param {Array.<[String]>} data The data returned by the service call.
-     * @param {String} response The complete HTTP response.
-     */
-
-    /**
-     * Очистить таблицу
-     * @param {module:api/DefaultApi~tableDataDeleteCallback} callback The callback function, accepting three arguments: error, data, response
-     * data is of type: {@link Array.<[String]>}
-     */
-    tableDataDelete(callback) {
-      let postBody = null;
-
-      let pathParams = {
-      };
-      let queryParams = {
-      };
-      let headerParams = {
-      };
-      let formParams = {
-      };
-
-      let authNames = [];
-      let contentTypes = [];
-      let accepts = ['application/json'];
-      let returnType = [['String']];
-      return this.apiClient.callApi(
-        '/table-data', 'DELETE',
-        pathParams, queryParams, headerParams, formParams, postBody,
-        authNames, contentTypes, accepts, returnType, null, callback
-      );
-    }
-
-    /**
-     * Callback function to receive the result of the tableDataGet operation.
-     * @callback module:api/DefaultApi~tableDataGetCallback
-     * @param {String} error Error message, if any.
-     * @param {Array.<[String]>} data The data returned by the service call.
-     * @param {String} response The complete HTTP response.
-     */
-
-    /**
-     * Получить таблицу
-     * @param {module:api/DefaultApi~tableDataGetCallback} callback The callback function, accepting three arguments: error, data, response
-     * data is of type: {@link Array.<[String]>}
-     */
-    tableDataGet(callback) {
-      let postBody = null;
-
-      let pathParams = {
-      };
-      let queryParams = {
-      };
-      let headerParams = {
-      };
-      let formParams = {
-      };
-
-      let authNames = [];
-      let contentTypes = [];
-      let accepts = ['application/json'];
-      let returnType = [['String']];
-      return this.apiClient.callApi(
-        '/table-data', 'GET',
         pathParams, queryParams, headerParams, formParams, postBody,
         authNames, contentTypes, accepts, returnType, null, callback
       );
