@@ -40,6 +40,7 @@ function Table() {
 
         loadTableData();
 
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // =====================================================
@@ -52,12 +53,22 @@ function Table() {
             `${protocol}://${window.location.hostname}:5000`;
 
         const socket = new WebSocket(socketUrl);
+        let closedByReact = false;
 
         socket.onopen = () => {
+            // Если StrictMode уже вызвал cleanup,
+            // закрываем первое тестовое соединение после подключения
+            if (closedByReact) {
+                socket.close();
+                return;
+            }
+
             console.log('✅ WebSocket подключён');
         };
 
         socket.onmessage = (event) => {
+            if (closedByReact) return;
+
             try {
                 const message = JSON.parse(event.data);
 
@@ -95,15 +106,25 @@ function Table() {
         };
 
         socket.onerror = (error) => {
-            console.error('Ошибка WebSocket:', error);
+            if (!closedByReact) {
+                console.error('Ошибка WebSocket:', error);
+            }
         };
 
         socket.onclose = () => {
-            console.log('WebSocket отключён');
+            if (!closedByReact) {
+                console.log('WebSocket отключён');
+            }
         };
 
         return () => {
-            socket.close();
+            closedByReact = true;
+
+            // Если соединение уже установлено — закрываем сразу.
+            // CONNECTING не закрываем, чтобы браузер не выдавал ошибку.
+            if (socket.readyState === WebSocket.OPEN) {
+                socket.close();
+            }
         };
     }, []);
 
