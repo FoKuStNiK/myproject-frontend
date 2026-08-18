@@ -35,6 +35,115 @@ export default class DefaultApi {
 
 
     /**
+     * Callback function to receive the result of the clearTableData operation.
+     * @callback module:api/DefaultApi~clearTableDataCallback
+     * @param {String} error Error message, if any.
+     * @param {Array.<Array.<String>>} data The data returned by the service call.
+     * @param {String} response The complete HTTP response.
+     */
+
+    /**
+     * Очистить таблицу
+     * @param {module:api/DefaultApi~clearTableDataCallback} callback The callback function, accepting three arguments: error, data, response
+     */
+    clearTableData(callback) {
+      let postBody = null;
+
+      let pathParams = {
+      };
+      let queryParams = {
+      };
+      let headerParams = {
+      };
+      let formParams = {
+      };
+
+      let authNames = [];
+      let contentTypes = [];
+      let accepts = ['application/json'];
+      let returnType = [['String']];
+      return this.apiClient.callApi(
+        '/table-data', 'DELETE',
+        pathParams, queryParams, headerParams, formParams, postBody,
+        authNames, contentTypes, accepts, returnType, null, callback
+      );
+    }
+
+    /**
+     * Callback function to receive the result of the getTableData operation.
+     * @callback module:api/DefaultApi~getTableDataCallback
+     * @param {String} error Error message, if any.
+     * @param {Array.<Array.<String>>} data The data returned by the service call.
+     * @param {String} response The complete HTTP response.
+     */
+
+    /**
+     * Получить таблицу
+     * @param {module:api/DefaultApi~getTableDataCallback} callback The callback function, accepting three arguments: error, data, response
+     */
+    getTableData(callback) {
+      let postBody = null;
+
+      let pathParams = {
+      };
+      let queryParams = {
+      };
+      let headerParams = {
+      };
+      let formParams = {
+      };
+
+      let authNames = [];
+      let contentTypes = [];
+      let accepts = ['application/json'];
+      let returnType = [['String']];
+      return this.apiClient.callApi(
+        '/table-data', 'GET',
+        pathParams, queryParams, headerParams, formParams, postBody,
+        authNames, contentTypes, accepts, returnType, null, callback
+      );
+    }
+
+    /**
+     * Callback function to receive the result of the updateTableCell operation.
+     * @callback module:api/DefaultApi~updateTableCellCallback
+     * @param {String} error Error message, if any.
+     * @param {Object} data The data returned by the service call.
+     * @param {String} response The complete HTTP response.
+     */
+
+    /**
+     * Обновить одну ячейку
+     * @param {Object} body Данные ячейки
+     * @param {module:api/DefaultApi~updateTableCellCallback} callback The callback function, accepting three arguments: error, data, response
+     */
+    updateTableCell(body, callback) {
+      let postBody = body;
+      if (body === undefined || body === null) {
+        throw new Error("Missing the required parameter 'body' when calling updateTableCell");
+      }
+
+      let pathParams = {
+      };
+      let queryParams = {
+      };
+      let headerParams = {
+      };
+      let formParams = {
+      };
+
+      let authNames = [];
+      let contentTypes = ['application/json'];
+      let accepts = ['application/json'];
+      let returnType = Object;
+      return this.apiClient.callApi(
+        '/table-data/cell', 'PATCH',
+        pathParams, queryParams, headerParams, formParams, postBody,
+        authNames, contentTypes, accepts, returnType, null, callback
+      );
+    }
+
+    /**
      * Callback function to receive the result of the achievementsGet operation.
      * @callback module:api/DefaultApi~achievementsGetCallback
      * @param {String} error Error message, if any.
