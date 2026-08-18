@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { getTableData, saveTableCell, clearTableData } from '../../api/tableApi';
 import './Table.css';
+
+const API_URL = 'http://localhost:5000/api';
 
 const updateTableCell = (table, rowToUpdate, colToUpdate, value) => {
     return table.map((row, rowIndex) =>
@@ -19,7 +20,10 @@ function Table() {
     useEffect(() => {
         const loadTableData = async () => {
             try {
-                const data = await getTableData();
+                const response = await fetch(`${API_URL}/table-data`);
+                if (!response.ok) throw new Error('Ошибка загрузки');
+
+                const data = await response.json();
                 setTableData(data);
                 setPreviousData(data);
             } catch (error) {
@@ -58,7 +62,10 @@ function Table() {
                 console.log('✅ WebSocket подключён');
 
                 try {
-                    const data = await getTableData();
+                    const response = await fetch(`${API_URL}/table-data`);
+                    if (!response.ok) return;
+
+                    const data = await response.json();
                     setTableData(data);
                     setPreviousData(data);
                 } catch (error) {
@@ -131,7 +138,19 @@ function Table() {
         if (currentValue === previousValue) return;
 
         try {
-            await saveTableCell(rowIndex, colIndex, currentValue);
+            const response = await fetch(`${API_URL}/table-data/cell`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    row: rowIndex,
+                    col: colIndex,
+                    value: currentValue
+                })
+            });
+
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.error || 'Ошибка сохранения');
+
             setPreviousData(previousTable =>
                 updateTableCell(previousTable, rowIndex, colIndex, currentValue)
             );
@@ -144,7 +163,13 @@ function Table() {
 
     const clearTable = async () => {
         try {
-            const data = await clearTableData();
+            const response = await fetch(`${API_URL}/table-data`, {
+                method: 'DELETE'
+            });
+
+            if (!response.ok) throw new Error('Ошибка очистки таблицы');
+
+            const data = await response.json();
             setTableData(data);
             setPreviousData(data);
             toast.success('🗑️ Таблица очищена');
