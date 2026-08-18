@@ -27,7 +27,6 @@ function Table() {
                         }
                     });
                 });
-
                 setTableData(data);
                 setPreviousData(data);
             } catch (error) {
@@ -39,90 +38,122 @@ function Table() {
         };
 
         loadTableData();
-
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // =====================================================
-    // 2. WebSocket только для получения изменений
+    // 2. WebSocket для получения изменений + reconnect
     // =====================================================
     useEffect(() => {
         const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+
         const socketUrl =
             process.env.REACT_APP_WS_URL ||
             `${protocol}://${window.location.hostname}:5000`;
 
-        const socket = new WebSocket(socketUrl);
+        let socket = null;
+        let reconnectTimer = null;
         let closedByReact = false;
 
-        socket.onopen = () => {
-            // Если StrictMode уже вызвал cleanup,
-            // закрываем первое тестовое соединение после подключения
+        const connectSocket = () => {
+            // Если компонент уже удалён — новое соединение не создаём
             if (closedByReact) {
-                socket.close();
                 return;
             }
+            console.log('🔄 Подключение к WebSocket...');
+            socket = new WebSocket(socketUrl);
 
-            console.log('✅ WebSocket подключён');
-        };
-
-        socket.onmessage = (event) => {
-            if (closedByReact) return;
-
-            try {
-                const message = JSON.parse(event.data);
-
-                // Другой пользователь изменил ячейку
-                if (message.type === 'cell:updated') {
-                    setTableData(prev =>
-                        prev.map((row, rowIndex) =>
-                            rowIndex === message.row
-                                ? row.map((cell, colIndex) =>
-                                    colIndex === message.col ? message.value : cell
-                                )
-                                : row
-                        )
-                    );
-
-                    setPreviousData(prev =>
-                        prev.map((row, rowIndex) =>
-                            rowIndex === message.row
-                                ? row.map((cell, colIndex) =>
-                                    colIndex === message.col ? message.value : cell
-                                )
-                                : row
-                        )
-                    );
+            socket.onopen = () => {
+                // Если React успел вызвать cleanup,
+                // пока соединение устанавливалось
+                if (closedByReact) {
+                    socket.close();
+                    return;
                 }
 
-                // Другой пользователь очистил таблицу
-                if (message.type === 'table:cleared') {
-                    setTableData(message.data);
-                    setPreviousData(message.data);
+                console.log('✅ WebSocket подключён');
+            };
+
+            socket.onmessage = (event) => {
+                if (closedByReact) {
+                    return;
                 }
-            } catch (error) {
-                console.error('Ошибка обработки WebSocket сообщения:', error);
-            }
+
+                try {
+                    const message = JSON.parse(event.data);
+
+                    // Другой пользователь изменил ячейку
+                    if (message.type === 'cell:updated') {
+                        setTableData(prev =>
+                            prev.map((row, rowIndex) =>
+                                rowIndex === message.row
+                                    ? row.map((cell, colIndex) =>
+                                        colIndex === message.col
+                                            ? message.value
+                                            : cell
+                                    )
+                                    : row
+                            )
+                        );
+
+                        setPreviousData(prev =>
+                            prev.map((row, rowIndex) =>
+                                rowIndex === message.row
+                                    ? row.map((cell, colIndex) =>
+                                        colIndex === message.col
+                                            ? message.value
+                                            : cell
+                                    )
+                                    : row
+                            )
+                        );
+                    }
+                    // Другой пользователь очистил таблицу
+                    if (message.type === 'table:cleared') {
+                        setTableData(message.data);
+                        setPreviousData(message.data);
+                    }
+                } catch (error) {
+                    console.error(
+                        'Ошибка обработки WebSocket сообщения:',
+                        error
+                    );
+                }
+            };
+
+            socket.onerror = (error) => {
+                if (!closedByReact) {
+                    console.error('Ошибка WebSocket:', error);
+                }
+            };
+
+            socket.onclose = () => {
+                if (closedByReact) {
+                    return;
+                }
+
+                console.log('⚠️ WebSocket отключён');
+
+                // Через 3 секунды пробуем подключиться снова
+                reconnectTimer = setTimeout(() => {
+                    connectSocket();
+                }, 3000);
+                
+            };
         };
 
-        socket.onerror = (error) => {
-            if (!closedByReact) {
-                console.error('Ошибка WebSocket:', error);
-            }
-        };
-
-        socket.onclose = () => {
-            if (!closedByReact) {
-                console.log('WebSocket отключён');
-            }
-        };
+        // Первое подключение
+        connectSocket();
 
         return () => {
             closedByReact = true;
 
-            // Если соединение уже установлено — закрываем сразу.
-            // CONNECTING не закрываем, чтобы браузер не выдавал ошибку.
-            if (socket.readyState === WebSocket.OPEN) {
+            // Если уже запланирован reconnect — отменяем его
+            if (reconnectTimer) {
+                clearTimeout(reconnectTimer);
+            }
+
+            // Если соединение открыто — закрываем
+            if (socket?.readyState === WebSocket.OPEN) {
                 socket.close();
             }
         };
@@ -134,7 +165,9 @@ function Table() {
     const handleCellChange = (rowIndex, colIndex, value) => {
         const newData = tableData.map((row, r) =>
             r === rowIndex
-                ? row.map((cell, c) => c === colIndex ? value : cell)
+                ? row.map((cell, c) =>
+                    c === colIndex ? value : cell
+                )
                 : row
         );
 
@@ -179,14 +212,17 @@ function Table() {
                     prev.map((row, r) =>
                         r === rowIndex
                             ? row.map((cell, c) =>
-                                c === colIndex ? currentValue : cell
+                                c === colIndex
+                                    ? currentValue
+                                    : cell
                             )
                             : row
                     )
                 );
             } else {
                 toast.error(
-                    '❌ Ошибка: ' + (result.message || 'Неизвестная ошибка')
+                    '❌ Ошибка: ' +
+                    (result.message || 'Неизвестная ошибка')
                 );
             }
         } catch (error) {
@@ -261,11 +297,17 @@ function Table() {
                                             )
                                         }
                                         onBlur={() =>
-                                            handleSaveCell(rowIndex, colIndex)
+                                            handleSaveCell(
+                                                rowIndex,
+                                                colIndex
+                                            )
                                         }
                                         onKeyDown={(e) => {
                                             if (e.key === 'Enter') {
-                                                handleSaveCell(rowIndex, colIndex);
+                                                handleSaveCell(
+                                                    rowIndex,
+                                                    colIndex
+                                                );
                                             }
                                         }}
                                         placeholder={`Строка ${rowIndex + 1}`}
