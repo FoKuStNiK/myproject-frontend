@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import DefaultApi from '../api-js/src/api/DefaultApi';
+import { getAchievements } from '../api/achievementsApi';
 import './Pages.css';
-
-const api = new DefaultApi();
 
 function AchievementsPage() {
     const [achievements, setAchievements] = useState('Загрузка достижений...');
@@ -10,20 +8,15 @@ function AchievementsPage() {
     useEffect(() => {
         const loadAchievements = async () => {
             try {
-                const data = await new Promise((resolve, reject) => {
-                    api.achievementsGet((error, data) => {
-                        if (error) reject(error);
-                        else resolve(data);
-                    });
-                });
+                const data = await getAchievements();
                 setAchievements(data.message);
             } catch (error) {
                 console.error('Ошибка загрузки достижений:', error);
                 setAchievements('❌ Не удалось загрузить достижения');
             }
         };
+
         loadAchievements();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     return (

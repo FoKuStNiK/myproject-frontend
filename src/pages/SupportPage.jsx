@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import DefaultApi from '../api-js/src/api/DefaultApi';
+import { getSupport } from '../api/supportApi';
 import './Pages.css';
-
-const api = new DefaultApi();
 
 function SupportPage() {
     const [support, setSupport] = useState('Загрузка...');
@@ -10,20 +8,15 @@ function SupportPage() {
     useEffect(() => {
         const loadSupport = async () => {
             try {
-                const data = await new Promise((resolve, reject) => {
-                    api.supportGet((error, data) => {
-                        if (error) reject(error);
-                        else resolve(data);
-                    });
-                });
+                const data = await getSupport();
                 setSupport(data.message);
             } catch (error) {
                 console.error('Ошибка загрузки поддержки:', error);
                 setSupport('❌ Не удалось загрузить данные поддержки');
             }
         };
+
         loadSupport();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     return (
