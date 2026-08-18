@@ -7,6 +7,7 @@ servers:
 paths:
   /table-data:
     get:
+      operationId: getTableData
       summary: Получить таблицу
       responses:
         '200':
@@ -20,6 +21,7 @@ paths:
                   items:
                     type: string
     delete:
+      operationId: clearTableData
       summary: Очистить таблицу
       responses:
         '200':
@@ -34,6 +36,7 @@ paths:
                     type: string
   /table-data/cell:
     patch:
+      operationId: updateTableCell
       summary: Обновить одну ячейку
       requestBody:
         required: true
