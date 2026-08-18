@@ -2,18 +2,11 @@ import React, { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import './Table.css';
 
-const updateTableCell = (
-    table,
-    rowToUpdate,
-    colToUpdate,
-    value
-) => {
+const updateTableCell = (table, rowToUpdate, colToUpdate, value) => {
     return table.map((row, rowIndex) =>
         rowIndex === rowToUpdate
             ? row.map((cell, colIndex) =>
-                colIndex === colToUpdate
-                    ? value
-                    : cell
+                colIndex === colToUpdate ? value : cell
             )
             : row
     );
@@ -27,220 +20,213 @@ function Table() {
     const socketRef = useRef(null);
 
     useEffect(() => {
-        const protocol =
-            window.location.protocol === 'https:'
-                ? 'wss'
-                : 'ws';
-
+        const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
         const socketUrl =
             process.env.REACT_APP_WS_URL ||
             `${protocol}://${window.location.hostname}:5000`;
 
-        const socket = new WebSocket(socketUrl);
+        let reconnectTimer = null;
+        let closedByReact = false;
 
-        socketRef.current = socket;
-
-        socket.onopen = () => {
-            setLoading(true);
-
-            socket.send(
-                JSON.stringify({
-                    type: 'table:get'
-                })
-            );
-        };
-
-        socket.onmessage = (event) => {
-            const message = JSON.parse(event.data);
-
-            // Получение всей таблицы
-            if (message.type === 'table:data') {
-                setTableData(message.data);
-                setPreviousData(message.data);
-                setLoading(false);
+        const connectSocket = () => {
+            if (closedByReact) {
+                return;
             }
 
-            // Изменение одной ячейки
-            if (message.type === 'cell:updated') {
-                setTableData((previousTable) =>
-                    updateTableCell(
-                        previousTable,
-                        message.row,
-                        message.col,
-                        message.value
-                    )
-                );
+            console.log('🔄 Подключение к WebSocket...');
 
-                setPreviousData((previousTable) =>
-                    updateTableCell(
-                        previousTable,
-                        message.row,
-                        message.col,
-                        message.value
-                    )
-                );
-            }
+            const socket = new WebSocket(socketUrl);
+            socketRef.current = socket;
 
-            // Результат сохранения ячейки
-            if (message.type === 'cell:saved') {
-                if (message.success) {
-                    toast.success(
-                        `✅ Ячейка (${message.row + 1}, ${
-                            message.col + 1
-                        }) сохранена`
-                    );
-                } else {
-                    toast.error(
-                        '❌ Ошибка: ' +
-                        (
-                            message.message ||
-                            'Неизвестная ошибка'
-                        )
-                    );
+            socket.onopen = () => {
+                if (closedByReact) {
+                    socket.close();
+                    return;
                 }
-            }
 
-            // Получение очищенной таблицы
-            if (message.type === 'table:cleared') {
-                setTableData(message.data);
-                setPreviousData(message.data);
-            }
+                console.log('✅ WebSocket подключён');
 
-            // Результат команды очистки
-            if (
-                message.type === 'table:clear:result' &&
-                message.success
-            ) {
-                toast.success('🗑️ Таблица очищена');
-            }
+                socket.send(JSON.stringify({
+                    type: 'table:get'
+                }));
+            };
 
-            // Ошибка, присланная backend
-            if (message.type === 'error') {
-                console.error(
-                    'Ошибка от backend:',
-                    message.message
-                );
+            socket.onmessage = event => {
+                if (closedByReact) {
+                    return;
+                }
 
-                toast.error(
-                    `❌ ${message.message}`
-                );
-            }
+                try {
+                    const message = JSON.parse(event.data);
+
+                    // Получение всей таблицы
+                    if (message.type === 'table:data') {
+                        setTableData(message.data);
+                        setPreviousData(message.data);
+                        setLoading(false);
+                    }
+
+                    // Изменение одной ячейки
+                    if (message.type === 'cell:updated') {
+                        setTableData(previousTable =>
+                            updateTableCell(
+                                previousTable,
+                                message.row,
+                                message.col,
+                                message.value
+                            )
+                        );
+
+                        setPreviousData(previousTable =>
+                            updateTableCell(
+                                previousTable,
+                                message.row,
+                                message.col,
+                                message.value
+                            )
+                        );
+                    }
+
+                    // Результат сохранения ячейки
+                    if (message.type === 'cell:saved') {
+                        if (message.success) {
+                            toast.success(
+                                `✅ Ячейка (${message.row + 1}, ${message.col + 1}) сохранена`
+                            );
+                        } else {
+                            toast.error(
+                                '❌ Ошибка: ' +
+                                (message.message || 'Неизвестная ошибка')
+                            );
+                        }
+                    }
+
+                    // Получение очищенной таблицы
+                    if (message.type === 'table:cleared') {
+                        setTableData(message.data);
+                        setPreviousData(message.data);
+                    }
+
+                    // Результат команды очистки
+                    if (
+                        message.type === 'table:clear:result' &&
+                        message.success
+                    ) {
+                        toast.success('🗑️ Таблица очищена');
+                    }
+
+                    // Ошибка, присланная backend
+                    if (message.type === 'error') {
+                        console.error('Ошибка от backend:', message.message);
+                        toast.error(`❌ ${message.message}`);
+                    }
+                } catch (error) {
+                    console.error('Ошибка обработки WebSocket сообщения:', error);
+                }
+            };
+
+            socket.onerror = error => {
+                if (!closedByReact) {
+                    console.error('Ошибка WebSocket:', error);
+                }
+            };
+
+            socket.onclose = () => {
+                if (socketRef.current === socket) {
+                    socketRef.current = null;
+                }
+
+                if (closedByReact) {
+                    return;
+                }
+
+                console.log('⚠️ WebSocket отключён');
+                console.log('🔄 Переподключение через 3 секунды...');
+
+                reconnectTimer = setTimeout(() => {
+                    connectSocket();
+                }, 3000);
+            };
         };
 
-        socket.onerror = (error) => {
-            console.error(
-                'Ошибка WebSocket:',
-                error
-            );
-
-            toast.error(
-                '❌ Ошибка соединения с сервером'
-            );
-
-            setLoading(false);
-        };
+        // Первое подключение
+        connectSocket();
 
         return () => {
-            socket.onmessage = null;
-            socket.onerror = null;
+            closedByReact = true;
 
-            if (socketRef.current === socket) {
-                socketRef.current = null;
+            if (reconnectTimer) {
+                clearTimeout(reconnectTimer);
             }
 
-            if (
-                socket.readyState === WebSocket.CONNECTING
-            ) {
+            const socket = socketRef.current;
+            socketRef.current = null;
+
+            if (!socket) {
+                return;
+            }
+
+            socket.onmessage = null;
+            socket.onerror = null;
+            socket.onclose = null;
+
+            if (socket.readyState === WebSocket.CONNECTING) {
                 socket.onopen = () => socket.close();
-            } else if (
-                socket.readyState === WebSocket.OPEN
-            ) {
+            } else if (socket.readyState === WebSocket.OPEN) {
                 socket.close();
             }
         };
     }, []);
 
     // Изменение ячейки только на экране
-    const handleCellChange = (
-        rowIndex,
-        colIndex,
-        value
-    ) => {
-        setTableData((previousTable) =>
-            updateTableCell(
-                previousTable,
-                rowIndex,
-                colIndex,
-                value
-            )
+    const handleCellChange = (rowIndex, colIndex, value) => {
+        setTableData(previousTable =>
+            updateTableCell(previousTable, rowIndex, colIndex, value)
         );
     };
 
     // Отправка изменённой ячейки backend
-    const handleSaveCell = (
-        rowIndex,
-        colIndex
-    ) => {
-        const currentValue =
-            tableData[rowIndex][colIndex];
+    const handleSaveCell = (rowIndex, colIndex) => {
+        const currentValue = tableData[rowIndex][colIndex];
+        const previousValue = previousData[rowIndex]?.[colIndex];
 
-        const previousValue =
-            previousData[rowIndex]?.[colIndex];
-
-        // Значение не изменилось
         if (currentValue === previousValue) {
             return;
         }
 
         if (
             !socketRef.current ||
-            socketRef.current.readyState !==
-                WebSocket.OPEN
+            socketRef.current.readyState !== WebSocket.OPEN
         ) {
-            toast.error(
-                '❌ Ошибка соединения с сервером'
-            );
-
+            toast.error('❌ Ошибка соединения с сервером');
             return;
         }
 
-        socketRef.current.send(
-            JSON.stringify({
-                type: 'cell:update',
-                row: rowIndex,
-                col: colIndex,
-                value: currentValue
-            })
-        );
+        socketRef.current.send(JSON.stringify({
+            type: 'cell:update',
+            row: rowIndex,
+            col: colIndex,
+            value: currentValue
+        }));
     };
 
     // Отправка команды очистки
     const clearTable = () => {
         if (
             !socketRef.current ||
-            socketRef.current.readyState !==
-                WebSocket.OPEN
+            socketRef.current.readyState !== WebSocket.OPEN
         ) {
-            toast.error(
-                '❌ Ошибка очистки таблицы'
-            );
-
+            toast.error('❌ Ошибка очистки таблицы');
             return;
         }
 
-        socketRef.current.send(
-            JSON.stringify({
-                type: 'table:clear'
-            })
-        );
+        socketRef.current.send(JSON.stringify({
+            type: 'table:clear'
+        }));
     };
 
     if (loading) {
-        return (
-            <div className="loading">
-                Загрузка...
-            </div>
-        );
+        return <div className="loading">Загрузка...</div>;
     }
 
     return (
@@ -262,68 +248,40 @@ function Table() {
                 </thead>
 
                 <tbody>
-                    {tableData.map(
-                        (row, rowIndex) => (
-                            <tr key={rowIndex}>
-                                {row.map(
-                                    (
-                                        cell,
-                                        colIndex
-                                    ) => (
-                                        <td key={colIndex}>
-                                            <input
-                                                type="text"
-                                                value={cell}
-                                                onChange={(
-                                                    event
-                                                ) =>
-                                                    handleCellChange(
-                                                        rowIndex,
-                                                        colIndex,
-                                                        event
-                                                            .target
-                                                            .value
-                                                    )
-                                                }
-                                                onBlur={() =>
-                                                    handleSaveCell(
-                                                        rowIndex,
-                                                        colIndex
-                                                    )
-                                                }
-                                                onKeyDown={(
-                                                    event
-                                                ) => {
-                                                    if (
-                                                        event.key ===
-                                                        'Enter'
-                                                    ) {
-                                                        event
-                                                            .currentTarget
-                                                            .blur();
-                                                    }
-                                                }}
-                                                placeholder={
-                                                    `Строка ${
-                                                        rowIndex +
-                                                        1
-                                                    }`
-                                                }
-                                                className="table-input"
-                                            />
-                                        </td>
-                                    )
-                                )}
-                            </tr>
-                        )
-                    )}
+                    {tableData.map((row, rowIndex) => (
+                        <tr key={rowIndex}>
+                            {row.map((cell, colIndex) => (
+                                <td key={colIndex}>
+                                    <input
+                                        type="text"
+                                        value={cell}
+                                        onChange={event =>
+                                            handleCellChange(
+                                                rowIndex,
+                                                colIndex,
+                                                event.target.value
+                                            )
+                                        }
+                                        onBlur={() =>
+                                            handleSaveCell(rowIndex, colIndex)
+                                        }
+                                        onKeyDown={event => {
+                                            if (event.key === 'Enter') {
+                                                event.currentTarget.blur();
+                                            }
+                                        }}
+                                        placeholder={`Строка ${rowIndex + 1}`}
+                                        className="table-input"
+                                    />
+                                </td>
+                            ))}
+                        </tr>
+                    ))}
                 </tbody>
             </table>
 
             <div className="table-footer">
-                <span>
-                    Строк: 6 | Столбцов: 4
-                </span>
+                <span>Строк: 6 | Столбцов: 4</span>
 
                 <button
                     onClick={clearTable}
