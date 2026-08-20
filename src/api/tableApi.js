@@ -1,29 +1,21 @@
-const protocol = window.location.protocol === 'https:' ? 'https' : 'http';
-const API_URL =
-    process.env.REACT_APP_API_URL ||
-    `${protocol}://${window.location.hostname}:5000/api`;
+import DefaultApi from '../api-js/src/api/DefaultApi';
 
-const request = async (url, options = {}) => {
-    const response = await fetch(url, options);
-    const data = await response.json();
-
-    if (!response.ok) {
-        throw new Error(data.error || 'Ошибка сервера');
-    }
-
-    return data;
-};
+const api = new DefaultApi();
 
 export const getTableData = () => {
-    return request(`${API_URL}/table-data`);
+    return new Promise((resolve, reject) => {
+        api.getTableData((error, data) => {
+            if (error) reject(error);
+            else resolve(data);
+        });
+    });
 };
 
 export const saveTableCell = (row, col, value) => {
-    return request(`${API_URL}/table-data/cell`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ row, col, value })
+    return new Promise((resolve, reject) => {
+        api.updateTableCell({ row, col, value }, (error, data) => {
+            if (error) reject(error);
+            else resolve(data);
+        });
     });
 };
