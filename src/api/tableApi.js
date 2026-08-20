@@ -1,6 +1,7 @@
+const protocol = window.location.protocol === 'https:' ? 'https' : 'http';
 const API_URL =
     process.env.REACT_APP_API_URL ||
-    `http://${window.location.hostname}:5000/api`;
+    `${protocol}://${window.location.hostname}:5000/api`;
 
 const request = async (url, options = {}) => {
     const response = await fetch(url, options);
