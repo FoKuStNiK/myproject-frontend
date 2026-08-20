@@ -1,5 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
+import {
+    getTableData,
+    saveTableCell,
+    clearTableData
+} from '../../api/tableApi';
 
 const updateTableCell = (table, rowToUpdate, colToUpdate, value) => {
     return table.map((row, rowIndex) =>
@@ -54,10 +59,6 @@ function useTableSocket() {
                 }
 
                 hasConnectedOnce = true;
-
-                socket.send(JSON.stringify({
-                    type: 'table:get'
-                }));
             };
 
             socket.onmessage = event => {
@@ -68,28 +69,17 @@ function useTableSocket() {
                 try {
                     const message = JSON.parse(event.data);
 
-                    // Прикладной ping от backend.
-                    // Отвечаем обычным WebSocket сообщением pong,
-                    // чтобы ping/pong были видны в F12 → Network → WS → Messages.
-                    if (message.type === 'ping') {
+                    if (message.type === 'PING') {
                         if (socket.readyState === WebSocket.OPEN) {
                             socket.send(JSON.stringify({
-                                type: 'pong',
+                                type: 'PONG',
                                 timestamp: message.timestamp
                             }));
                         }
                         return;
                     }
 
-                    // Получение всей таблицы
-                    if (message.type === 'table:data') {
-                        setTableData(message.data);
-                        setPreviousData(message.data);
-                        setLoading(false);
-                    }
-
-                    // Изменение одной ячейки
-                    if (message.type === 'cell:updated') {
+                    if (message.type === 'CELL_UPDATED') {
                         setTableData(previousTable =>
                             updateTableCell(
                                 previousTable,
@@ -109,36 +99,12 @@ function useTableSocket() {
                         );
                     }
 
-                    // Результат сохранения ячейки
-                    if (message.type === 'cell:saved') {
-                        if (message.success) {
-                            toast.success(
-                                `✅ Ячейка (${message.row + 1}, ${message.col + 1}) сохранена`
-                            );
-                        } else {
-                            toast.error(
-                                '❌ Ошибка: ' +
-                                (message.message || 'Неизвестная ошибка')
-                            );
-                        }
-                    }
-
-                    // Получение очищенной таблицы
-                    if (message.type === 'table:cleared') {
+                    if (message.type === 'TABLE_CLEARED') {
                         setTableData(message.data);
                         setPreviousData(message.data);
                     }
 
-                    // Результат команды очистки
-                    if (
-                        message.type === 'table:clear:result' &&
-                        message.success
-                    ) {
-                        toast.success('🗑️ Таблица очищена');
-                    }
-
-                    // Ошибка, присланная backend
-                    if (message.type === 'error') {
+                    if (message.type === 'ERROR') {
                         console.error('Ошибка от backend:', message.message);
                         toast.error(`❌ ${message.message}`);
                     }
@@ -163,7 +129,7 @@ function useTableSocket() {
                 }
 
                 console.log('⚠️ WebSocket отключён');
-                console.log('🔄 Переподключение через 3 секунды...');
+                console.log('🔄 Повторная загрузка и подключение через 3 секунды...');
 
                 if (connectionToastId === null) {
                     connectionToastId = toast.error(
@@ -175,13 +141,56 @@ function useTableSocket() {
                 }
 
                 reconnectTimer = setTimeout(() => {
-                    connectSocket();
+                    loadTableAndConnect(false);
                 }, 3000);
             };
         };
 
-        // Первое подключение
-        connectSocket();
+        const loadTableAndConnect = async (showLoading = true) => {
+            if (closedByReact) {
+                return;
+            }
+
+            if (showLoading) {
+                setLoading(true);
+            }
+
+            try {
+                // Сначала обычный GET получает актуальное состояние таблицы.
+                const data = await getTableData();
+
+                if (closedByReact) {
+                    return;
+                }
+
+                setTableData(data);
+                setPreviousData(data);
+                setLoading(false);
+
+                // Только после получения состояния подключаем подписку WebSocket.
+                connectSocket();
+            } catch (error) {
+                if (closedByReact) {
+                    return;
+                }
+
+                console.error('Ошибка загрузки таблицы:', error);
+                setLoading(false);
+
+                if (connectionToastId === null) {
+                    connectionToastId = toast.error(
+                        '❌ Ошибка загрузки таблицы',
+                        { duration: Infinity }
+                    );
+                }
+
+                reconnectTimer = setTimeout(() => {
+                    loadTableAndConnect(false);
+                }, 3000);
+            }
+        };
+
+        loadTableAndConnect();
 
         return () => {
             closedByReact = true;
@@ -220,8 +229,8 @@ function useTableSocket() {
         );
     };
 
-    // Отправка изменённой ячейки backend
-    const handleSaveCell = (rowIndex, colIndex) => {
+    // Сохранение изменённой ячейки обычным HTTP POST
+    const handleSaveCell = async (rowIndex, colIndex) => {
         const currentValue = tableData[rowIndex][colIndex];
         const previousValue = previousData[rowIndex]?.[colIndex];
 
@@ -229,35 +238,38 @@ function useTableSocket() {
             return;
         }
 
-        if (
-            !socketRef.current ||
-            socketRef.current.readyState !== WebSocket.OPEN
-        ) {
-            toast.error('❌ Ошибка соединения с сервером');
-            return;
-        }
+        try {
+            await saveTableCell(rowIndex, colIndex, currentValue);
 
-        socketRef.current.send(JSON.stringify({
-            type: 'cell:update',
-            row: rowIndex,
-            col: colIndex,
-            value: currentValue
-        }));
+            setPreviousData(previousTable =>
+                updateTableCell(
+                    previousTable,
+                    rowIndex,
+                    colIndex,
+                    currentValue
+                )
+            );
+
+            toast.success(
+                `✅ Ячейка (${rowIndex + 1}, ${colIndex + 1}) сохранена`
+            );
+        } catch (error) {
+            console.error('Ошибка сохранения ячейки:', error);
+            toast.error(`❌ ${error.message}`);
+        }
     };
 
-    // Отправка команды очистки
-    const clearTable = () => {
-        if (
-            !socketRef.current ||
-            socketRef.current.readyState !== WebSocket.OPEN
-        ) {
+    // Очистка таблицы обычным HTTP DELETE
+    const clearTable = async () => {
+        try {
+            const data = await clearTableData();
+            setTableData(data);
+            setPreviousData(data);
+            toast.success('🗑️ Таблица очищена');
+        } catch (error) {
+            console.error('Ошибка очистки таблицы:', error);
             toast.error('❌ Ошибка очистки таблицы');
-            return;
         }
-
-        socketRef.current.send(JSON.stringify({
-            type: 'table:clear'
-        }));
     };
 
     return {
