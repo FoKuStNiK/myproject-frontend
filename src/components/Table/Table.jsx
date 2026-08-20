@@ -27,6 +27,8 @@ function Table() {
 
         let reconnectTimer = null;
         let closedByReact = false;
+        let hasConnectedOnce = false;
+        let connectionToastId = null;
 
         const connectSocket = () => {
             if (closedByReact) {
@@ -46,6 +48,14 @@ function Table() {
 
                 console.log('✅ WebSocket подключён');
 
+                if (connectionToastId !== null) {
+                    toast.dismiss(connectionToastId);
+                    connectionToastId = null;
+                    toast.success('✅ Связь восстановлена');
+                }
+
+                hasConnectedOnce = true;
+
                 socket.send(JSON.stringify({
                     type: 'table:get'
                 }));
@@ -58,6 +68,19 @@ function Table() {
 
                 try {
                     const message = JSON.parse(event.data);
+
+                    // Прикладной ping от backend.
+                    // Отвечаем обычным WebSocket сообщением pong,
+                    // чтобы ping/pong были видны в F12 → Network → WS → Messages.
+                    if (message.type === 'ping') {
+                        if (socket.readyState === WebSocket.OPEN) {
+                            socket.send(JSON.stringify({
+                                type: 'pong',
+                                timestamp: message.timestamp
+                            }));
+                        }
+                        return;
+                    }
 
                     // Получение всей таблицы
                     if (message.type === 'table:data') {
@@ -143,6 +166,17 @@ function Table() {
                 console.log('⚠️ WebSocket отключён');
                 console.log('🔄 Переподключение через 3 секунды...');
 
+                // Показываем одно постоянное уведомление и не дублируем его
+                // при каждой неудачной попытке переподключения.
+                if (connectionToastId === null) {
+                    connectionToastId = toast.error(
+                        hasConnectedOnce
+                            ? '⚠️ Связь потеряна'
+                            : '❌ Нет связи с сервером',
+                        { duration: Infinity }
+                    );
+                }
+
                 reconnectTimer = setTimeout(() => {
                     connectSocket();
                 }, 3000);
@@ -157,6 +191,10 @@ function Table() {
 
             if (reconnectTimer) {
                 clearTimeout(reconnectTimer);
+            }
+
+            if (connectionToastId !== null) {
+                toast.dismiss(connectionToastId);
             }
 
             const socket = socketRef.current;
