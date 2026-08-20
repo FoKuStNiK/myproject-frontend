@@ -44,3 +44,46 @@ paths:
                 properties:
                   message:
                     type: string
+  /table-data:
+    get:
+      operationId: getTableData
+      summary: Получить таблицу
+      responses:
+        '200':
+          description: Текущее состояние таблицы
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: array
+                  items:
+                    type: string
+  /table-data/cell:
+    post:
+      operationId: updateTableCell
+      summary: Обновить одну ячейку
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - row
+                - col
+                - value
+              properties:
+                row:
+                  type: integer
+                col:
+                  type: integer
+                value:
+                  type: string
+      responses:
+        '200':
+          description: Ячейка сохранена
+          content:
+            application/json:
+              schema:
+                type: object
