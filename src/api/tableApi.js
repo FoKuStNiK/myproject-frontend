@@ -27,9 +27,3 @@ export const saveTableCell = (row, col, value) => {
         body: JSON.stringify({ row, col, value })
     });
 };
-
-export const clearTableData = () => {
-    return request(`${API_URL}/table-data`, {
-        method: 'DELETE'
-    });
-};
