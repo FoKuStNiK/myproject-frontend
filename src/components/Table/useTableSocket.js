@@ -1,10 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import {
-    getTableData,
-    saveTableCell,
-    clearTableData
-} from '../../api/tableApi';
+import { getTableData, saveTableCell } from '../../api/tableApi';
 
 const updateTableCell = (table, rowToUpdate, colToUpdate, value) => {
     return table.map((row, rowIndex) =>
@@ -104,6 +100,13 @@ function useTableSocket() {
                         setPreviousData(message.data);
                     }
 
+                    if (
+                        message.type === 'TABLE_CLEAR_RESULT' &&
+                        message.success
+                    ) {
+                        toast.success('🗑️ Таблица очищена');
+                    }
+
                     if (message.type === 'ERROR') {
                         console.error('Ошибка от backend:', message.message);
                         toast.error(`❌ ${message.message}`);
@@ -156,7 +159,6 @@ function useTableSocket() {
             }
 
             try {
-                // Сначала обычный GET получает актуальное состояние таблицы.
                 const data = await getTableData();
 
                 if (closedByReact) {
@@ -167,7 +169,6 @@ function useTableSocket() {
                 setPreviousData(data);
                 setLoading(false);
 
-                // Только после получения состояния подключаем подписку WebSocket.
                 connectSocket();
             } catch (error) {
                 if (closedByReact) {
@@ -222,14 +223,12 @@ function useTableSocket() {
         };
     }, []);
 
-    // Изменение ячейки только на экране
     const handleCellChange = (rowIndex, colIndex, value) => {
         setTableData(previousTable =>
             updateTableCell(previousTable, rowIndex, colIndex, value)
         );
     };
 
-    // Сохранение изменённой ячейки обычным HTTP POST
     const handleSaveCell = async (rowIndex, colIndex) => {
         const currentValue = tableData[rowIndex][colIndex];
         const previousValue = previousData[rowIndex]?.[colIndex];
@@ -259,17 +258,18 @@ function useTableSocket() {
         }
     };
 
-    // Очистка таблицы обычным HTTP DELETE
-    const clearTable = async () => {
-        try {
-            const data = await clearTableData();
-            setTableData(data);
-            setPreviousData(data);
-            toast.success('🗑️ Таблица очищена');
-        } catch (error) {
-            console.error('Ошибка очистки таблицы:', error);
+    const clearTable = () => {
+        if (
+            !socketRef.current ||
+            socketRef.current.readyState !== WebSocket.OPEN
+        ) {
             toast.error('❌ Ошибка очистки таблицы');
+            return;
         }
+
+        socketRef.current.send(JSON.stringify({
+            type: 'TABLE_CLEAR'
+        }));
     };
 
     return {
