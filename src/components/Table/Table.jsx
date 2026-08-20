@@ -70,8 +70,6 @@ function Table() {
                     const message = JSON.parse(event.data);
 
                     // Прикладной ping от backend.
-                    // Отвечаем обычным WebSocket сообщением pong,
-                    // чтобы ping/pong были видны в F12 → Network → WS → Messages.
                     if (message.type === 'ping') {
                         if (socket.readyState === WebSocket.OPEN) {
                             socket.send(JSON.stringify({
