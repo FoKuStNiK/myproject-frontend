@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { getTableData, saveTableCell } from '../../api/tableApi';
+import { getTableData } from '../../api/tableApi';
 
 const updateTableCell = (table, rowToUpdate, colToUpdate, value) => {
     return table.map((row, rowIndex) =>
@@ -92,6 +92,15 @@ function useTableSocket() {
                                 message.col,
                                 message.value
                             )
+                        );
+                    }
+
+                    if (
+                        message.type === 'CELL_SAVED' &&
+                        message.success
+                    ) {
+                        toast.success(
+                            `✅ Ячейка (${message.row + 1}, ${message.col + 1}) сохранена`
                         );
                     }
 
@@ -229,7 +238,7 @@ function useTableSocket() {
         );
     };
 
-    const handleSaveCell = async (rowIndex, colIndex) => {
+    const handleSaveCell = (rowIndex, colIndex) => {
         const currentValue = tableData[rowIndex][colIndex];
         const previousValue = previousData[rowIndex]?.[colIndex];
 
@@ -237,25 +246,20 @@ function useTableSocket() {
             return;
         }
 
-        try {
-            await saveTableCell(rowIndex, colIndex, currentValue);
-
-            setPreviousData(previousTable =>
-                updateTableCell(
-                    previousTable,
-                    rowIndex,
-                    colIndex,
-                    currentValue
-                )
-            );
-
-            toast.success(
-                `✅ Ячейка (${rowIndex + 1}, ${colIndex + 1}) сохранена`
-            );
-        } catch (error) {
-            console.error('Ошибка сохранения ячейки:', error);
-            toast.error(`❌ ${error.message}`);
+        if (
+            !socketRef.current ||
+            socketRef.current.readyState !== WebSocket.OPEN
+        ) {
+            toast.error('❌ Ошибка соединения с сервером');
+            return;
         }
+
+        socketRef.current.send(JSON.stringify({
+            type: 'CELL_UPDATE',
+            row: rowIndex,
+            col: colIndex,
+            value: currentValue
+        }));
     };
 
     const clearTable = () => {
