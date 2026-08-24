@@ -22,6 +22,16 @@ function Table() {
         disconnected: '🔴 Нет связи'
     }[connectionStatus];
 
+    const handleClearClick = () => {
+        const confirmed = window.confirm('Очистить всю таблицу?');
+
+        if (!confirmed) {
+            return;
+        }
+
+        clearTable();
+    };
+
     return (
         <div className="table-container">
             <h3>📊 Таблица 6×4</h3>
@@ -81,7 +91,7 @@ function Table() {
                 <span>Строк: 6 | Столбцов: 4</span>
 
                 <button
-                    onClick={clearTable}
+                    onClick={handleClearClick}
                     className="clear-button"
                 >
                     🗑️ Очистить
