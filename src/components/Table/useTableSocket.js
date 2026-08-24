@@ -17,8 +17,6 @@ function useTableSocket() {
     const [previousData, setPreviousData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [connectionStatus, setConnectionStatus] = useState('connecting');
-    const [clientId, setClientId] = useState(null);
-    const [lastChange, setLastChange] = useState(null);
 
     const socketRef = useRef(null);
 
@@ -40,7 +38,6 @@ function useTableSocket() {
 
             console.log('🔄 Подключение к WebSocket...');
             setConnectionStatus('connecting');
-            setClientId(null);
 
             const socket = new WebSocket(socketUrl);
             socketRef.current = socket;
@@ -71,11 +68,6 @@ function useTableSocket() {
                 try {
                     const message = JSON.parse(event.data);
 
-                    if (message.type === 'CLIENT_ASSIGNED') {
-                        setClientId(message.clientId);
-                        return;
-                    }
-
                     if (message.type === 'PING') {
                         if (socket.readyState === WebSocket.OPEN) {
                             socket.send(JSON.stringify({
@@ -104,12 +96,6 @@ function useTableSocket() {
                                 message.value
                             )
                         );
-
-                        setLastChange({
-                            clientId: message.clientId,
-                            row: message.row,
-                            col: message.col
-                        });
                     }
 
                     if (
@@ -158,7 +144,6 @@ function useTableSocket() {
                 }
 
                 setConnectionStatus('disconnected');
-                setClientId(null);
                 console.log('⚠️ WebSocket отключён');
                 console.log('🔄 Повторная загрузка и подключение через 3 секунды...');
 
@@ -206,7 +191,6 @@ function useTableSocket() {
                 console.error('Ошибка загрузки таблицы:', error);
                 setLoading(false);
                 setConnectionStatus('disconnected');
-                setClientId(null);
 
                 if (connectionToastId === null) {
                     connectionToastId = toast.error(
@@ -301,8 +285,6 @@ function useTableSocket() {
         tableData,
         loading,
         connectionStatus,
-        clientId,
-        lastChange,
         handleCellChange,
         handleSaveCell,
         clearTable
