@@ -16,6 +16,7 @@ function useTableSocket() {
     const [tableData, setTableData] = useState([]);
     const [previousData, setPreviousData] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [connectionStatus, setConnectionStatus] = useState('connecting');
 
     const socketRef = useRef(null);
 
@@ -36,6 +37,7 @@ function useTableSocket() {
             }
 
             console.log('🔄 Подключение к WebSocket...');
+            setConnectionStatus('connecting');
 
             const socket = new WebSocket(socketUrl);
             socketRef.current = socket;
@@ -47,6 +49,7 @@ function useTableSocket() {
                 }
 
                 console.log('✅ WebSocket подключён');
+                setConnectionStatus('connected');
 
                 if (connectionToastId !== null) {
                     toast.dismiss(connectionToastId);
@@ -140,6 +143,7 @@ function useTableSocket() {
                     return;
                 }
 
+                setConnectionStatus('disconnected');
                 console.log('⚠️ WebSocket отключён');
                 console.log('🔄 Повторная загрузка и подключение через 3 секунды...');
 
@@ -186,6 +190,7 @@ function useTableSocket() {
 
                 console.error('Ошибка загрузки таблицы:', error);
                 setLoading(false);
+                setConnectionStatus('disconnected');
 
                 if (connectionToastId === null) {
                     connectionToastId = toast.error(
@@ -279,6 +284,7 @@ function useTableSocket() {
     return {
         tableData,
         loading,
+        connectionStatus,
         handleCellChange,
         handleSaveCell,
         clearTable
