@@ -6,6 +6,7 @@ function Table() {
     const {
         tableData,
         loading,
+        connectionStatus,
         handleCellChange,
         handleSaveCell,
         clearTable
@@ -15,6 +16,12 @@ function Table() {
         return <div className="loading">Загрузка...</div>;
     }
 
+    const connectionStatusText = {
+        connected: '🟢 Подключено',
+        connecting: '🟡 Подключение...',
+        disconnected: '🔴 Нет связи'
+    }[connectionStatus];
+
     return (
         <div className="table-container">
             <h3>📊 Таблица 6×4</h3>
@@ -22,6 +29,10 @@ function Table() {
             <p className="table-hint">
                 Кликните на ячейку и введите данные
             </p>
+
+            <div className={`connection-status ${connectionStatus}`}>
+                WebSocket: {connectionStatusText}
+            </div>
 
             <table className="data-table">
                 <thead>
