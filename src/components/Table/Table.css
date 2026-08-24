@@ -18,15 +18,9 @@
     margin: 0 0 12px 0;
 }
 
-.connection-info {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 8px;
-}
-
 .connection-status {
     display: inline-block;
+    margin-bottom: 20px;
     padding: 6px 10px;
     border-radius: 6px;
     font-size: 13px;
@@ -46,18 +40,6 @@
 .connection-status.disconnected {
     background: #fdedec;
     color: #c0392b;
-}
-
-.client-id {
-    color: #5d6d7e;
-    font-size: 13px;
-    font-weight: 600;
-}
-
-.last-change {
-    margin: 0 0 20px 0;
-    color: #7f8c8d;
-    font-size: 13px;
 }
 
 .data-table {
