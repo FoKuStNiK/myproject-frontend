@@ -7,8 +7,6 @@ function Table() {
         tableData,
         loading,
         connectionStatus,
-        clientId,
-        lastChange,
         handleCellChange,
         handleSaveCell,
         clearTable
@@ -26,12 +24,6 @@ function Table() {
         disconnected: '🔴 Нет связи'
     }[connectionStatus];
 
-    const lastChangeSource = lastChange
-        ? lastChange.clientId === null
-            ? 'HTTP/API'
-            : `Клиент ${lastChange.clientId}`
-        : null;
-
     const confirmClearTable = () => {
         clearTable();
         setIsClearModalOpen(false);
@@ -45,21 +37,9 @@ function Table() {
                 Кликните на ячейку и введите данные
             </p>
 
-            <div className="connection-info">
-                <div className={`connection-status ${connectionStatus}`}>
-                    WebSocket: {connectionStatusText}
-                </div>
-
-                <span className="client-id">
-                    Вы: {clientId ? `Клиент ${clientId}` : '—'}
-                </span>
+            <div className={`connection-status ${connectionStatus}`}>
+                WebSocket: {connectionStatusText}
             </div>
-
-            {lastChange && (
-                <p className="last-change">
-                    Последнее изменение: {lastChangeSource}, ячейка ({lastChange.row + 1}, {lastChange.col + 1})
-                </p>
-            )}
 
             <table className="data-table">
                 <thead>
