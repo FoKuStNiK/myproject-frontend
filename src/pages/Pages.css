@@ -8,6 +8,10 @@
     margin-bottom: 10px;
 }
 
+.home-title {
+    color: red;
+}
+
 .content-card {
     background: white;
     padding: 25px;
