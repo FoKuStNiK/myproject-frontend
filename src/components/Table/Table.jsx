@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import useTableSocket from './useTableSocket';
 import './Table.css';
 
@@ -12,6 +12,8 @@ function Table() {
         clearTable
     } = useTableSocket();
 
+    const [isClearModalOpen, setIsClearModalOpen] = useState(false);
+
     if (loading) {
         return <div className="loading">Загрузка...</div>;
     }
@@ -22,14 +24,9 @@ function Table() {
         disconnected: '🔴 Нет связи'
     }[connectionStatus];
 
-    const handleClearClick = () => {
-        const confirmed = window.confirm('Очистить всю таблицу?');
-
-        if (!confirmed) {
-            return;
-        }
-
+    const confirmClearTable = () => {
         clearTable();
+        setIsClearModalOpen(false);
     };
 
     return (
@@ -91,12 +88,42 @@ function Table() {
                 <span>Строк: 6 | Столбцов: 4</span>
 
                 <button
-                    onClick={handleClearClick}
+                    onClick={() => setIsClearModalOpen(true)}
                     className="clear-button"
                 >
                     🗑️ Очистить
                 </button>
             </div>
+
+            {isClearModalOpen && (
+                <div className="modal-overlay">
+                    <div
+                        className="clear-modal"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="clear-modal-title"
+                    >
+                        <h4 id="clear-modal-title">Очистить таблицу?</h4>
+                        <p>Все данные в ячейках будут удалены.</p>
+
+                        <div className="modal-actions">
+                            <button
+                                onClick={() => setIsClearModalOpen(false)}
+                                className="cancel-button"
+                            >
+                                Отмена
+                            </button>
+
+                            <button
+                                onClick={confirmClearTable}
+                                className="confirm-clear-button"
+                            >
+                                🗑️ Очистить
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
