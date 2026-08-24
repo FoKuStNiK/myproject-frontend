@@ -15,7 +15,31 @@
 .table-hint {
     color: #95a5a6;
     font-size: 14px;
-    margin: 0 0 20px 0;
+    margin: 0 0 12px 0;
+}
+
+.connection-status {
+    display: inline-block;
+    margin-bottom: 20px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.connection-status.connected {
+    background: #eafaf1;
+    color: #1e8449;
+}
+
+.connection-status.connecting {
+    background: #fef9e7;
+    color: #9a7d0a;
+}
+
+.connection-status.disconnected {
+    background: #fdedec;
+    color: #c0392b;
 }
 
 .data-table {
