@@ -71,8 +71,7 @@ function useTableSocket() {
                     if (message.type === 'PING') {
                         if (socket.readyState === WebSocket.OPEN) {
                             socket.send(JSON.stringify({
-                                type: 'PONG',
-                                timestamp: message.timestamp
+                                type: 'PONG'
                             }));
                         }
                         return;
