@@ -123,16 +123,11 @@ Class | Method | HTTP request | Description
 *MyProjectApi.DefaultApi* | [**achievementsGet**](docs/DefaultApi.md#achievementsGet) | **GET** /achievements | Получить достижения
 *MyProjectApi.DefaultApi* | [**newsGet**](docs/DefaultApi.md#newsGet) | **GET** /news | Получить новости
 *MyProjectApi.DefaultApi* | [**supportGet**](docs/DefaultApi.md#supportGet) | **GET** /support | Получить поддержку
-*MyProjectApi.DefaultApi* | [**tableDataCellPatch**](docs/DefaultApi.md#tableDataCellPatch) | **PATCH** /table-data/cell | Обновить одну ячейку
-*MyProjectApi.DefaultApi* | [**tableDataDelete**](docs/DefaultApi.md#tableDataDelete) | **DELETE** /table-data | Очистить таблицу
-*MyProjectApi.DefaultApi* | [**tableDataGet**](docs/DefaultApi.md#tableDataGet) | **GET** /table-data | Получить таблицу
 
 
 ## Documentation for Models
 
  - [MyProjectApi.NewsGet200Response](docs/NewsGet200Response.md)
- - [MyProjectApi.TableDataCellPatch200Response](docs/TableDataCellPatch200Response.md)
- - [MyProjectApi.TableDataCellPatchRequest](docs/TableDataCellPatchRequest.md)
 
 
 ## Documentation for Authorization

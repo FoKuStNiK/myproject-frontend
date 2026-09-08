@@ -5,61 +5,6 @@ info:
 servers:
   - url: http://localhost:5000/api
 paths:
-  /table-data:
-    get:
-      summary: Получить таблицу
-      responses:
-        '200':
-          description: Успешный ответ
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: array
-                  items:
-                    type: string
-    delete:
-      summary: Очистить таблицу
-      responses:
-        '200':
-          description: Таблица очищена
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: array
-                  items:
-                    type: string
-  /table-data/cell:
-    patch:
-      summary: Обновить одну ячейку
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                row:
-                  type: integer
-                col:
-                  type: integer
-                value:
-                  type: string
-      responses:
-        '200':
-          description: Ячейка обновлена
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                  message:
-                    type: string
   /news:
     get:
       summary: Получить новости
@@ -99,3 +44,46 @@ paths:
                 properties:
                   message:
                     type: string
+  /table-data:
+    get:
+      operationId: getTableData
+      summary: Получить таблицу
+      responses:
+        '200':
+          description: Текущее состояние таблицы
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: array
+                  items:
+                    type: string
+  /table-data/cell:
+    post:
+      operationId: updateTableCell
+      summary: Обновить одну ячейку
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - row
+                - col
+                - value
+              properties:
+                row:
+                  type: integer
+                col:
+                  type: integer
+                value:
+                  type: string
+      responses:
+        '200':
+          description: Ячейка сохранена
+          content:
+            application/json:
+              schema:
+                type: object

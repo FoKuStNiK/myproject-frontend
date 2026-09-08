@@ -1,12 +1,9 @@
 .babelrc
 .gitignore
-.openapi-generator-ignore
 .travis.yml
 README.md
 docs/DefaultApi.md
 docs/NewsGet200Response.md
-docs/TableDataCellPatch200Response.md
-docs/TableDataCellPatchRequest.md
 git_push.sh
 mocha.opts
 package.json
@@ -14,9 +11,3 @@ src/ApiClient.js
 src/api/DefaultApi.js
 src/index.js
 src/model/NewsGet200Response.js
-src/model/TableDataCellPatch200Response.js
-src/model/TableDataCellPatchRequest.js
-test/api/DefaultApi.spec.js
-test/model/NewsGet200Response.spec.js
-test/model/TableDataCellPatch200Response.spec.js
-test/model/TableDataCellPatchRequest.spec.js

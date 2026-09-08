@@ -1,110 +1,46 @@
-import React, { useState, useEffect } from 'react';
-import { toast } from 'sonner';
-import DefaultApi from '../../api-js/src/api/DefaultApi';
+import React, { useState } from 'react';
+import useTableSocket from './useTableSocket';
 import './Table.css';
-// Это комментарий — он не влияет на работу кода
-// hi
-const api = new DefaultApi();
 
 function Table() {
-    const [tableData, setTableData] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [previousData, setPreviousData] = useState([]);
+    const {
+        tableData,
+        loading,
+        connectionStatus,
+        handleCellChange,
+        handleSaveCell,
+        clearTable
+    } = useTableSocket();
 
-    // 1. Загрузка данных (одна функция)
-    useEffect(() => {
-        const loadTableData = async () => {
-            setLoading(true);
-            try {
-                const data = await new Promise((resolve, reject) => {
-                    api.tableDataGet((error, data) => {
-                        if (error) reject(error);
-                        else resolve(data);
-                    });
-                });
-                setTableData(data);
-                setPreviousData(data);
-            } catch (error) {
-                console.error('Ошибка загрузки:', error);
-                toast.error('❌ Ошибка загрузки таблицы');
-            } finally {
-                setLoading(false);
-            }
-        };
-        loadTableData();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    const [isClearModalOpen, setIsClearModalOpen] = useState(false);
 
-    // 2. Изменение ячейки (локально)
-    const handleCellChange = (rowIndex, colIndex, value) => {
-        const newData = tableData.map((row, r) =>
-            r === rowIndex
-                ? row.map((cell, c) => c === colIndex ? value : cell)
-                : row
-        );
-        setTableData(newData);
+    if (loading) {
+        return <div className="loading">Загрузка...</div>;
+    }
+
+    const connectionStatusText = {
+        connected: '🟢 Подключено',
+        connecting: '🟡 Подключение...',
+        disconnected: '🔴 Нет связи'
+    }[connectionStatus];
+
+    const confirmClearTable = () => {
+        clearTable();
+        setIsClearModalOpen(false);
     };
-
-    // 3. Сохранение ячейки (одна функция)
-    const handleSaveCell = async (rowIndex, colIndex) => {
-        const currentValue = tableData[rowIndex][colIndex];
-        const previousValue = previousData[rowIndex]?.[colIndex];
-
-        if (currentValue === previousValue) return;
-
-        try {
-            const result = await new Promise((resolve, reject) => {
-                api.tableDataCellPatch(
-                    { row: rowIndex, col: colIndex, value: currentValue },
-                    (error, data) => {
-                        if (error) reject(error);
-                        else resolve(data);
-                    }
-                );
-            });
-
-            if (result.success) {
-                toast.success(`✅ Ячейка (${rowIndex + 1}, ${colIndex + 1}) сохранена`);
-                setPreviousData(prev => {
-                    const newData = prev.map((row, r) =>
-                        r === rowIndex
-                            ? row.map((cell, c) => c === colIndex ? currentValue : cell)
-                            : row
-                    );
-                    return newData;
-                });
-            } else {
-                toast.error('❌ Ошибка: ' + (result.message || 'Неизвестная ошибка'));
-            }
-        } catch (error) {
-            console.error('Ошибка сохранения ячейки:', error);
-            toast.error('❌ Ошибка соединения с сервером');
-        }
-    };
-    // 4. Очистка таблицы (одна функция)
-    const clearTable = async () => {
-        try {
-            const newTable = await new Promise((resolve, reject) => {
-                api.tableDataDelete((error, data) => {
-                    if (error) reject(error);
-                    else resolve(data);
-                });
-            });
-            setTableData(newTable);
-            setPreviousData(newTable);
-            toast.success('🗑️ Таблица очищена');
-        } catch (error) {
-            console.error('Ошибка очистки:', error);
-            toast.error('❌ Ошибка очистки таблицы');
-        }
-    };
-
-    if (loading) return <div className="loading">Загрузка...</div>;
 
     return (
         <div className="table-container">
             <h3>📊 Таблица 6×4</h3>
-            <p className="table-hint">Кликните на ячейку и введите данные</p>
+
+            <p className="table-hint">
+                Кликните на ячейку и введите данные
+            </p>
+
+            <div className={`connection-status ${connectionStatus}`}>
+                WebSocket: {connectionStatusText}
+            </div>
+
             <table className="data-table">
                 <thead>
                     <tr>
@@ -114,6 +50,7 @@ function Table() {
                         <th>Столбец 4</th>
                     </tr>
                 </thead>
+
                 <tbody>
                     {tableData.map((row, rowIndex) => (
                         <tr key={rowIndex}>
@@ -122,11 +59,19 @@ function Table() {
                                     <input
                                         type="text"
                                         value={cell}
-                                        onChange={(e) => handleCellChange(rowIndex, colIndex, e.target.value)}
-                                        onBlur={() => handleSaveCell(rowIndex, colIndex)}
-                                        onKeyDown={(e) => {
-                                            if (e.key === 'Enter') {
-                                                handleSaveCell(rowIndex, colIndex);
+                                        onChange={event =>
+                                            handleCellChange(
+                                                rowIndex,
+                                                colIndex,
+                                                event.target.value
+                                            )
+                                        }
+                                        onBlur={() =>
+                                            handleSaveCell(rowIndex, colIndex)
+                                        }
+                                        onKeyDown={event => {
+                                            if (event.key === 'Enter') {
+                                                event.currentTarget.blur();
                                             }
                                         }}
                                         placeholder={`Строка ${rowIndex + 1}`}
@@ -138,10 +83,47 @@ function Table() {
                     ))}
                 </tbody>
             </table>
+
             <div className="table-footer">
                 <span>Строк: 6 | Столбцов: 4</span>
-                <button onClick={clearTable} className="clear-button">🗑️ Очистить</button>
+
+                <button
+                    onClick={() => setIsClearModalOpen(true)}
+                    className="clear-button"
+                >
+                    🗑️ Очистить
+                </button>
             </div>
+
+            {isClearModalOpen && (
+                <div className="modal-overlay">
+                    <div
+                        className="clear-modal"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="clear-modal-title"
+                    >
+                        <h4 id="clear-modal-title">Очистить таблицу?</h4>
+                        <p>Все данные в ячейках будут удалены.</p>
+
+                        <div className="modal-actions">
+                            <button
+                                onClick={() => setIsClearModalOpen(false)}
+                                className="cancel-button"
+                            >
+                                Отмена
+                            </button>
+
+                            <button
+                                onClick={confirmClearTable}
+                                className="confirm-clear-button"
+                            >
+                                🗑️ Очистить
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
